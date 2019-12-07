@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use App\Product;
 use Auth;
-
+use Illuminate\Support\Str;
 class ProductsController extends Controller
 {
     public function index(){
@@ -14,9 +14,25 @@ class ProductsController extends Controller
 
     public function store(Request $request){
 
-    	\Log::info($request->all());
+    	/*\Log::info($request->all());*/
 
-    	$product = Product::create($request->except('image') + ['user_id' => Auth::id()]);
+        $exploded = explode(',', $request->image);
+
+        $decoded = base64_decode($exploded[1]);
+
+        if(Str::contains($exploded[0], 'jpeg')){
+            $extension = 'jpg';
+        } else {
+            $extension = 'png';
+        }
+
+        $fileName = Str::random().'.'.$extension;
+
+        $path = public_path().'/'.$fileName;
+        
+        file_put_contents($path, $decoded);
+
+    	$product = Product::create($request->except('image') + ['user_id' => Auth::id(), 'image' => $fileName]);
         return $product;
     } 
 
